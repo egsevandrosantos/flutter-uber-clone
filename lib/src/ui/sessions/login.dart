@@ -62,7 +62,7 @@ class _LoginState extends State<Login> {
                           keyboardType: TextInputType.emailAddress,
                           textInputAction: TextInputAction.next,
                           onSubmitted: (String value) {
-                            nextFocusNode(_focusNodeEmail);
+                            _nextFocusNode(_focusNodeEmail);
                           },
                           decoration: InputDecoration(
                             filled: true,
@@ -156,7 +156,7 @@ class _LoginState extends State<Login> {
     );
   }
 
-  void nextFocusNode(FocusNode currentFocus) {
+  void _nextFocusNode(FocusNode currentFocus) {
     int nextIndex = _orderFocus.indexWhere((fn) => fn == currentFocus) + 1;
     if (nextIndex < _orderFocus.length)
       FocusScope.of(context).requestFocus(_orderFocus[nextIndex]);
