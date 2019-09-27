@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uber_clone/src/ui/home.dart';
+import 'package:uber_clone/src/ui/sessions/login.dart';
 
 class App extends StatelessWidget {
   @override
@@ -7,7 +7,7 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Uber Clone',
       debugShowCheckedModeBanner: false,
-      home: Home()
+      home: Login()
     );
   }
 }
