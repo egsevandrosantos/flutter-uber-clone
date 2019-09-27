@@ -132,20 +132,25 @@ class _LoginState extends State<Login> {
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
                   children: <Widget>[
-                    InkWell(
-                      onTap: () {
-                        print('TODO: Cadastre-se');
-                      },
-                      child: Text(
-                        'Não tem conta? Cadastre-se.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold
-                        ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          print('TODO: Cadastre-se');
+                        },
+                        child: Center(
+                          child: Text(
+                            'Não tem conta? Cadastre-se.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold
+                            ),
+                          ),
+                        )
                       ),
-                    ),
+                    )
                   ],
                 )
               ],
