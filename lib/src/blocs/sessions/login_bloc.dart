@@ -1,46 +1,22 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uber_clone/src/exceptions/validators/custom_exception.dart';
-import 'package:uber_clone/src/models/enums/type_user_enum.dart';
 import 'package:uber_clone/src/models/user.dart';
 
-class RegisterBloc {
-  bool _isDriver = false;
-  final PublishSubject<bool> _isDriverFetcher = PublishSubject<bool>();
+class LoginBloc {
   User _user = User.empty();
-  List<Map<String, dynamic>> _errorsName = List<Map<String, dynamic>>();
-  final PublishSubject<List<Map<String, dynamic>>> _errorsNameFetcher = PublishSubject<List<Map<String, dynamic>>>();
   List<Map<String, dynamic>> _errorsEmail = List<Map<String, dynamic>>();
-  final PublishSubject<List<Map<String, dynamic>>> _errorsEmailFetcher = PublishSubject<List<Map<String, dynamic>>>();
+  PublishSubject<List<Map<String, dynamic>>> _errorsEmailFetcher = PublishSubject<List<Map<String, dynamic>>>();
   List<Map<String, dynamic>> _errorsPassword = List<Map<String, dynamic>>();
-  final PublishSubject<List<Map<String, dynamic>>> _errorsPasswordFetcher = PublishSubject<List<Map<String, dynamic>>>();
+  PublishSubject<List<Map<String, dynamic>>> _errorsPasswordFetcher = PublishSubject<List<Map<String, dynamic>>>();
 
-  bool get isDriver => _isDriver;
-  Observable<bool> get isDriverFetcher => _isDriverFetcher.stream;
-  Observable<List<Map<String, dynamic>>> get errorsNameFetcher => _errorsNameFetcher.stream;
   Observable<List<Map<String, dynamic>>> get errorsEmailFetcher => _errorsEmailFetcher.stream;
   Observable<List<Map<String, dynamic>>> get errorsPasswordFetcher => _errorsPasswordFetcher.stream;
 
-  set isDriver(bool value) {
-    _isDriver = value;
-    _isDriverFetcher.sink.add(_isDriver);
-  }
-
-  bool validarCampos(String name, String email, String password) {
-    _errorsName = List<Map<String, dynamic>>();
+  bool validarCampos(String email, String password) {
     _errorsEmail = List<Map<String, dynamic>>();
     _errorsPassword = List<Map<String, dynamic>>();
-    List<Map<String, dynamic>> errors = List<Map<String, dynamic>>();
-
-    try {
-      name = _notBlankValidator(name, 'Nome');
-      _lengthValidator(name, 'Nome', max: 30);
-    } on CustomException catch (e) {
-      errors.add(e.error);
-      _errorsName.add(e.error);
-    }
-    _errorsNameFetcher.sink.add(_errorsName);
+    List<Map<String, dynamic>> errors = List<Map<String, dynamic>>(); 
 
     try {
       email = _notBlankValidator(email, 'Email');
@@ -61,11 +37,27 @@ class RegisterBloc {
     _errorsPasswordFetcher.sink.add(_errorsPassword);
 
     if (errors.length == 0) {
-      TypeUserEnum typeUser = _isDriver ? TypeUserEnum.DRIVER : TypeUserEnum.PASSENGER;
-      _user = User(name, email, password, typeUser);
+      _user = User.login(email, password);
       return true;
     }
     return false;
+  }
+
+  Future<Map<String, String>> logar() async {
+    Map<String, String> result = {};
+    result['path'] = '';
+    result['error'] = '';
+
+    FirebaseAuth auth = FirebaseAuth.instance;
+    AuthResult firebaseUser = await auth.signInWithEmailAndPassword(
+      email: _user.email,
+      password: _user.password
+    );
+    if (firebaseUser == null)
+      result['error'] = 'Erro ao autenticar, verifique os dados e tente novamente.';
+    else 
+      result['path'] = '/panelPassenger';
+    return result;
   }
 
   String _notBlankValidator(String value, String nomeCampo) {
@@ -97,24 +89,7 @@ class RegisterBloc {
     }
   }
 
-  Future<String> register() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    Firestore db = Firestore.instance;
-
-    AuthResult firebaseUser = await auth.createUserWithEmailAndPassword(
-      email: _user.email,
-      password: _user.password
-    );
-    db.collection('users').document(firebaseUser.user.uid).setData(_user.toMap());
-    if (_user.type == TypeUserEnum.DRIVER)
-      return '/panelDriver';
-    else
-      return '/panelPassenger';
-  }
-
   void dispose() {
-    _isDriverFetcher.close();
-    _errorsNameFetcher.close();
     _errorsEmailFetcher.close();
     _errorsPasswordFetcher.close();
   }

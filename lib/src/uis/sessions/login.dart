@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uber_clone/src/blocs/sessions/login_bloc.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -6,6 +7,8 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  LoginBloc bloc = LoginBloc();
+
   TextEditingController _controllerEmail = TextEditingController();
   FocusNode _focusNodeEmail = FocusNode();
   TextEditingController _controllerPassword = TextEditingController();
@@ -16,6 +19,58 @@ class _LoginState extends State<Login> {
   void initState() {
     super.initState();
     _orderFocus.addAll([_focusNodeEmail, _focusNodePassword]);
+  }
+
+  @override
+  void dispose() {
+    bloc.dispose();
+    super.dispose();
+  }
+
+  void _progressIndicator() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+    );
+  }
+
+  Future<void> _validarCampos() async {
+    String email = _controllerEmail.text;
+    String password = _controllerPassword.text;
+    if (bloc.validarCampos(email, password)) {
+      _progressIndicator();
+      Map<String, String> result = await bloc.logar();
+      Navigator.of(context).pop(); // Progress Indicator
+      if (result['path'] != '')
+        Navigator.pushReplacementNamed(context, result['path']);
+      else if (result['error'] != '')
+        _showError(result['error']);
+    }
+  }
+
+  void _showError(String error) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Erro.'),
+          content: Text(error),
+          actions: [
+            FlatButton(
+              child: Text("Ok"),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Confirm Dialog
+              },
+            )
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -55,24 +110,78 @@ class _LoginState extends State<Login> {
                     Expanded(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                        child: TextField(
-                          controller: _controllerEmail,
-                          focusNode: _focusNodeEmail,
-                          autofocus: true,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          onSubmitted: (String value) {
-                            _nextFocusNode(_focusNodeEmail);
+                        child: StreamBuilder(
+                          stream: bloc.errorsEmailFetcher,
+                          builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                            if (!snapshot.hasData || (snapshot.hasData && snapshot.data.length == 0)) {
+                              return TextField(
+                                controller: _controllerEmail,
+                                focusNode: _focusNodeEmail,
+                                autofocus: true,
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                onSubmitted: (String value) {
+                                  _nextFocusNode(_focusNodeEmail);
+                                },
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10)
+                                  ),
+                                  hintText: 'Email'
+                                ),
+                              );
+                            } else {
+                              Map<String, dynamic> error = snapshot.data.first;
+                              return Column(
+                                children: <Widget>[
+                                  TextField(
+                                    decoration: new InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.red, width: 1.0),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.red, width: 3.0),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      hintText: 'Email',
+                                    ),
+                                    controller: _controllerEmail,
+                                    focusNode: _focusNodeEmail,
+                                    autofocus: true,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
+                                    onSubmitted: (String value) {
+                                      _nextFocusNode(_focusNodeEmail);
+                                    },
+                                  ),
+
+                                  Container(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(left: 5, right: 5),
+                                      child: Column(
+                                        children: <Widget>[
+                                          RichText(
+                                            text: TextSpan(
+                                              text: error['errorMessage'],
+                                              style: TextStyle(
+                                                color: Colors.red
+                                              )
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              );
+                            }
                           },
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)
-                            ),
-                            hintText: 'Email'
-                          ),
-                        ),
+                        )
                       )
                     ),
                   ],
@@ -83,21 +192,78 @@ class _LoginState extends State<Login> {
                     Expanded(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(10, 5, 10, 5),
-                        child: TextField(
-                          controller: _controllerPassword,
-                          focusNode: _focusNodePassword,
-                          keyboardType: TextInputType.text,
-                          textInputAction: TextInputAction.go,
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10)
-                            ),
-                            hintText: 'Senha'
-                          ),
-                          obscureText: true,
-                        ),
+                        child: StreamBuilder(
+                          stream: bloc.errorsPasswordFetcher,
+                          builder: (context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+                            if (!snapshot.hasData || (snapshot.hasData && snapshot.data.length == 0)) {
+                              return TextField(
+                                controller: _controllerPassword,
+                                focusNode: _focusNodePassword,
+                                keyboardType: TextInputType.text,
+                                textInputAction: TextInputAction.go,
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10)
+                                  ),
+                                  hintText: 'Senha'
+                                ),
+                                obscureText: true,
+                                onSubmitted: (String value) {
+                                  _validarCampos();
+                                },
+                              );
+                            } else {
+                              Map<String, dynamic> error = snapshot.data.first;
+                              return Column(
+                                children: <Widget>[
+                                  TextField(
+                                    decoration: new InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      enabledBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.red, width: 1.0),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(color: Colors.red, width: 3.0),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      hintText: 'Senha',
+                                    ),
+                                    controller: _controllerPassword,
+                                    focusNode: _focusNodePassword,
+                                    keyboardType: TextInputType.text,
+                                    textInputAction: TextInputAction.go,
+                                    obscureText: true,
+                                    onSubmitted: (String value) {
+                                      _validarCampos();
+                                    },
+                                  ),
+
+                                  Container(
+                                    child: Padding(
+                                      padding: EdgeInsets.only(left: 5, right: 5),
+                                      child: Column(
+                                        children: <Widget>[
+                                          RichText(
+                                            text: TextSpan(
+                                              text: error['errorMessage'],
+                                              style: TextStyle(
+                                                color: Colors.red
+                                              )
+                                            ),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              );
+                            }
+                          },
+                        )
                       )
                     )
                   ],
@@ -110,7 +276,7 @@ class _LoginState extends State<Login> {
                         padding: EdgeInsets.fromLTRB(10, 5, 10, 10),
                         child: RaisedButton(
                           onPressed: () {
-                            print('TODO: Entrar');
+                            _validarCampos();
                           },
                           child: Text(
                             'Entrar',

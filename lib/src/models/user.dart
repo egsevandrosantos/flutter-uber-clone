@@ -10,6 +10,7 @@ class User {
   User.empty();
   User(this._name, this._email, this._password, this._type);
   User.withId(this._id, this._name, this._email, this._password, this._type);
+  User.login(this._email, this._password);
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> map = {
