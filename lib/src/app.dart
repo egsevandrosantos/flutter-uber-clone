@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:uber_clone/src/ui/sessions/login.dart';
+import 'package:uber_clone/src/routes.dart';
 
 final ThemeData defaultTheme = ThemeData(
   primaryColor: Color(0xff37474F),
@@ -12,8 +12,9 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: 'Uber Clone',
       theme: defaultTheme,
-      debugShowCheckedModeBanner: false,
-      home: Login()
+      initialRoute: "/",
+      onGenerateRoute: Routes.generatedRoutes,
+      debugShowCheckedModeBanner: false
     );
   }
 }
