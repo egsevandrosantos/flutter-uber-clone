@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uber_clone/src/ui/sessions/register.dart';
 
 class Login extends StatefulWidget {
   @override
@@ -137,7 +138,9 @@ class _LoginState extends State<Login> {
                     Expanded(
                       child: InkWell(
                         onTap: () {
-                          print('TODO: Cadastre-se');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => Register())
+                          );
                         },
                         child: Center(
                           child: Text(
