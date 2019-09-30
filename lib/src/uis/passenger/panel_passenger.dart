@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uber_clone/src/blocs/passenger/panel_passenger_bloc.dart';
 
 class PanelPassenger extends StatefulWidget {
   @override
@@ -6,13 +7,52 @@ class PanelPassenger extends StatefulWidget {
 }
 
 class _PanelPassengerState extends State<PanelPassenger> {
+  PanelPassengerBloc bloc = PanelPassengerBloc();
+  static const _menuItemConfigurations = "Configurações";
+  static const _menuItemLogout = "Sair";
+  List<String> _menuItems = [_menuItemConfigurations, _menuItemLogout];
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,     
-      child: Center(
-        child: Text('Painel Passageiro'),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Painel Passageiro'
+        ),
+        centerTitle: true,
+        actions: <Widget>[
+          PopupMenuButton<String>(
+            onSelected: _chooseMenuItem,
+            itemBuilder: (context) {
+              return _menuItems.map((i) {
+                return PopupMenuItem<String>(
+                  value: i,
+                  child: Text(
+                    i
+                  ),
+                );
+              }).toList();
+            },
+          )
+        ],
+      ),
+      body: Container(
+        color: Colors.purple,
       ),
     );
+  }
+
+  void _chooseMenuItem(String option) async {
+    switch (option) {
+      case _menuItemConfigurations:
+        print('Option 1');
+        break;
+      case _menuItemLogout:
+        await bloc.logout();
+        Navigator.pushReplacementNamed(context, '/');
+        break;
+      default:
+        break;
+    }
   }
 }
