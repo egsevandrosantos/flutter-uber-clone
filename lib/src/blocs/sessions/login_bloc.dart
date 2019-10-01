@@ -1,4 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uber_clone/src/exceptions/validators/custom_exception.dart';
 import 'package:uber_clone/src/models/user.dart';
@@ -9,9 +11,11 @@ class LoginBloc {
   PublishSubject<List<Map<String, dynamic>>> _errorsEmailFetcher = PublishSubject<List<Map<String, dynamic>>>();
   List<Map<String, dynamic>> _errorsPassword = List<Map<String, dynamic>>();
   PublishSubject<List<Map<String, dynamic>>> _errorsPasswordFetcher = PublishSubject<List<Map<String, dynamic>>>();
+  PublishSubject<User> _currentUserFetcher = PublishSubject<User>();
 
   Observable<List<Map<String, dynamic>>> get errorsEmailFetcher => _errorsEmailFetcher.stream;
   Observable<List<Map<String, dynamic>>> get errorsPasswordFetcher => _errorsPasswordFetcher.stream;
+  Observable<User> get currentUserFetcher => _currentUserFetcher.stream;
 
   bool validarCampos(String email, String password) {
     _errorsEmail = List<Map<String, dynamic>>();
@@ -43,21 +47,47 @@ class LoginBloc {
     return false;
   }
 
-  Future<Map<String, String>> logar() async {
-    Map<String, String> result = {};
-    result['path'] = '';
+  Future<Map<String, dynamic>> logar() async {
+    Map<String, dynamic> result = {};
+    result['user'] = null;
     result['error'] = '';
 
     FirebaseAuth auth = FirebaseAuth.instance;
-    AuthResult firebaseUser = await auth.signInWithEmailAndPassword(
-      email: _user.email,
-      password: _user.password
-    );
-    if (firebaseUser == null)
-      result['error'] = 'Erro ao autenticar, verifique os dados e tente novamente.';
-    else 
-      result['path'] = '/panelPassenger';
+    try {
+      AuthResult firebaseUser = await auth.signInWithEmailAndPassword(
+        email: _user.email,
+        password: _user.password
+      );
+      if (firebaseUser == null)
+        result['error'] = 'Erro ao autenticar, verifique os dados e tente novamente.';
+      else 
+        result['user'] = await _getUser(firebaseUser.user.uid);
+    } on PlatformException catch (e) {
+      if (e.code == "ERROR_WRONG_PASSWORD" || e.code == "ERROR_USER_NOT_FOUND")
+        result['error'] = 'Erro ao autenticar, verifique os dados e tente novamente.';
+    }
     return result;
+  }
+
+  Future<void> verifyCurrentUser() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser currentFirebaseUser = await auth.currentUser();
+    if (currentFirebaseUser != null) {
+      User user = await _getUser(currentFirebaseUser.uid);
+      user.setId = currentFirebaseUser.uid;
+      _currentUserFetcher.sink.add(user);
+    } else
+      _currentUserFetcher.sink.add(User.empty());
+  }
+
+  Future<User> _getUser(String uid) async {
+    Firestore db = Firestore.instance;
+    DocumentReference reference = db.collection("users").document("$uid");
+    DocumentSnapshot snapshot = await reference.get();
+    if (snapshot.exists) {
+      return User.byMap(snapshot.data);
+    }
+    return null;
   }
 
   String _notBlankValidator(String value, String nomeCampo) {
@@ -92,5 +122,6 @@ class LoginBloc {
   void dispose() {
     _errorsEmailFetcher.close();
     _errorsPasswordFetcher.close();
+    _currentUserFetcher.close();
   }
 }

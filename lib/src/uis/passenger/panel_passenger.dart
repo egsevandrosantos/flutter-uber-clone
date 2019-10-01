@@ -7,7 +7,7 @@ class PanelPassenger extends StatefulWidget {
 }
 
 class _PanelPassengerState extends State<PanelPassenger> {
-  PanelPassengerBloc bloc = PanelPassengerBloc();
+  PanelPassengerBloc _bloc = PanelPassengerBloc();
   static const _menuItemConfigurations = "Configurações";
   static const _menuItemLogout = "Sair";
   List<String> _menuItems = [_menuItemConfigurations, _menuItemLogout];
@@ -48,7 +48,7 @@ class _PanelPassengerState extends State<PanelPassenger> {
         print('Option 1');
         break;
       case _menuItemLogout:
-        await bloc.logout();
+        await _bloc.logout();
         Navigator.pushReplacementNamed(context, '/');
         break;
       default:
