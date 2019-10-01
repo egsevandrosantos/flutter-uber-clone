@@ -61,17 +61,77 @@ class _PanelPassengerState extends State<PanelPassenger> {
               stream: _bloc.positionFetcher,
               builder: (context, AsyncSnapshot<Position> position) {
                 if (position.hasData) {
-                  return GoogleMap(
-                    myLocationEnabled: havePermissionLocation.data,
-                    myLocationButtonEnabled: havePermissionLocation.data,
-                    mapType: MapType.normal,
-                    initialCameraPosition: CameraPosition(
-                      target: LatLng(position.data.latitude, position.data.longitude),
-                      zoom: 16
-                    ),
-                    onMapCreated: (GoogleMapController controller) {
-                      _controller.complete(controller);
-                    },
+                  return Stack(
+                    children: <Widget>[
+                      GoogleMap(
+                        myLocationEnabled: havePermissionLocation.data,
+                        myLocationButtonEnabled: false,
+                        mapType: MapType.normal,
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(position.data.latitude, position.data.longitude),
+                          zoom: 16
+                        ),
+                        onMapCreated: (GoogleMapController controller) {
+                          _controller.complete(controller);
+                        },
+                      ),
+
+                      Padding(
+                        padding: EdgeInsets.all(10),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.location_on,
+                              color: Colors.red,
+                            ),
+                            hintText: "Meu Local",
+                            fillColor: Colors.white,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)
+                            )
+                          ),
+                        ),
+                      ),
+
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(10, 75, 10, 10),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            prefixIcon: Icon(
+                              Icons.local_taxi,
+                              color: Colors.yellow[600],
+                            ),
+                            hintText: "Destino",
+                            fillColor: Colors.white,
+                            filled: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)
+                            )
+                          ),
+                        ),
+                      ),
+
+                      Positioned.fill(
+                        bottom: 10,
+                        left: 10,
+                        right: 10,
+                        top: MediaQuery.of(context).size.height * 0.80,
+                        child: RaisedButton(
+                          onPressed: (){
+                            print('Chamar');
+                          },
+                          color: Color(0xff1EBBD8),
+                          child: Text(
+                            'Chamar Uber',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
                   );
                 } 
                 return Center(
@@ -84,7 +144,7 @@ class _PanelPassengerState extends State<PanelPassenger> {
             child: CircularProgressIndicator()
           );
         },
-      )
+      ),
     );
   }
 
