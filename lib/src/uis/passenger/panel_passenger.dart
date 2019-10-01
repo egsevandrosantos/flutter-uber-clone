@@ -16,6 +16,7 @@ class _PanelPassengerState extends State<PanelPassenger> {
   static const _menuItemLogout = "Sair";
   List<String> _menuItems = [_menuItemConfigurations, _menuItemLogout];
   Completer<GoogleMapController> _controller = Completer();
+  Set<Marker> _markers = Set<Marker>();
 
   @override
   void initState() {
@@ -61,11 +62,13 @@ class _PanelPassengerState extends State<PanelPassenger> {
               stream: _bloc.positionFetcher,
               builder: (context, AsyncSnapshot<Position> position) {
                 if (position.hasData) {
+                  _addMarkerPassenger(position.data);
                   return Stack(
                     children: <Widget>[
                       GoogleMap(
                         myLocationEnabled: havePermissionLocation.data,
                         myLocationButtonEnabled: false,
+                        markers: _markers,
                         mapType: MapType.normal,
                         initialCameraPosition: CameraPosition(
                           target: LatLng(position.data.latitude, position.data.longitude),
@@ -160,5 +163,28 @@ class _PanelPassengerState extends State<PanelPassenger> {
       default:
         break;
     }
+  }
+
+  void _addMarkerPassenger(Position position) {
+    Set<Marker> markers = Set<Marker>();
+
+    double pixelRatio = MediaQuery.of(context).devicePixelRatio;
+    BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(devicePixelRatio: pixelRatio), 
+      'images/passageiro.png'
+    ).then((icon) {
+      Marker passengerMarker = Marker(
+        markerId: MarkerId('passengerMarker'),
+        position: LatLng(position.latitude, position.longitude),
+        infoWindow: InfoWindow(
+          title: 'Meu local'
+        ),
+        icon: icon
+      );
+
+      markers.add(passengerMarker);
+    });
+
+    _markers = markers;
   }
 }
