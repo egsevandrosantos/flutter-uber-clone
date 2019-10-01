@@ -333,7 +333,6 @@ class _LoginState extends State<Login> {
                 callbackStreamBuilder(() {
                   _gotoUrlByTypeOfUser(snapshot.data);
                 });
-                return Container();
               }
               return CircularProgressIndicator();
             },
