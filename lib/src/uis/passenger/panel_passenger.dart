@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:uber_clone/src/blocs/passenger/panel_passenger_bloc.dart';
 
@@ -15,15 +16,11 @@ class _PanelPassengerState extends State<PanelPassenger> {
   static const _menuItemLogout = "Sair";
   List<String> _menuItems = [_menuItemConfigurations, _menuItemLogout];
   Completer<GoogleMapController> _controller = Completer();
-  static final CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
-  );
 
   @override
   void initState() {
     super.initState();
-    _bloc.checkPermissionLocation();
+    _bloc.getLastPosition();
   }
 
   @override
@@ -60,13 +57,26 @@ class _PanelPassengerState extends State<PanelPassenger> {
         stream: _bloc.havePermissionLocationFetcher,
         builder: (context, AsyncSnapshot<bool> havePermissionLocation) {
           if (havePermissionLocation.hasData) {
-            return GoogleMap(
-              myLocationEnabled: havePermissionLocation.data,
-              myLocationButtonEnabled: havePermissionLocation.data,
-              mapType: MapType.normal,
-              initialCameraPosition: _kGooglePlex,
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
+            return StreamBuilder(
+              stream: _bloc.positionFetcher,
+              builder: (context, AsyncSnapshot<Position> position) {
+                if (position.hasData) {
+                  return GoogleMap(
+                    myLocationEnabled: havePermissionLocation.data,
+                    myLocationButtonEnabled: havePermissionLocation.data,
+                    mapType: MapType.normal,
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(position.data.latitude, position.data.longitude),
+                      zoom: 16
+                    ),
+                    onMapCreated: (GoogleMapController controller) {
+                      _controller.complete(controller);
+                    },
+                  );
+                } 
+                return Center(
+                  child: CircularProgressIndicator()
+                );
               },
             );
           }
