@@ -15,13 +15,21 @@
       },
       "oauth_client": [
         {
+          "client_id": "779028220612-85j6218jeok7ir6ph400s3gtuom96nj6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.evandro_santos.uber_clone",
+            "certificate_hash": "04931367d9a19ac532b2cf71010517f73c390d5f"
+          }
+        },
+        {
           "client_id": "779028220612-7972mrbnd1p52pafomigb1os90uic2pt.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyB45QEZ3tvq8lCerz1rxQ07wij1mPED93g"
+          "current_key": "AIzaSyAE9rba3a3OhPC5CNSx7waOTNppobZh87o"
         }
       ],
       "services": {
